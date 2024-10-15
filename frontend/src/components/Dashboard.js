@@ -1,6 +1,6 @@
 // src/components/Dashboard.js
-import React, { useEffect, useState, useMemo } from 'react';
-import { Line } from 'react-chartjs-2';
+import React, { useEffect, useState, useMemo } from "react";
+import { Line } from "react-chartjs-2";
 import {
   Select,
   MenuItem,
@@ -16,7 +16,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,10 +25,10 @@ import {
   LineElement,
   Tooltip,
   Legend,
-} from 'chart.js';
-import axios from 'axios';
-import { useParams } from 'react-router-dom'; // Changed from useLocation to useParams
-import { format } from 'date-fns'; // Ensure 'format' is imported
+} from "chart.js";
+import axios from "axios";
+import { useParams } from "react-router-dom"; // Changed from useLocation to useParams
+import { format } from "date-fns"; // Ensure 'format' is imported
 
 // Register Chart.js components
 ChartJS.register(
@@ -43,26 +43,26 @@ ChartJS.register(
 const Dashboard = () => {
   // State variables for metrics and chart data
   const [metrics, setMetrics] = useState([]);
-  const [selectedMetricId, setSelectedMetricId] = useState('');
+  const [selectedMetricId, setSelectedMetricId] = useState("");
   const [chartData, setChartData] = useState(null);
 
   // State variables for cascading dropdowns
   const [countries, setCountries] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState("");
 
   // State variables for manual Y-axis configuration
-  const [yAxisMax, setYAxisMax] = useState('');
-  const [yAxisMin, setYAxisMin] = useState('');
+  const [yAxisMax, setYAxisMax] = useState("");
+  const [yAxisMin, setYAxisMin] = useState("");
 
   // State variables for error handling and notifications
   const [yAxisMaxError, setYAxisMaxError] = useState(false);
   const [yAxisMinError, setYAxisMinError] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'error',
+    message: "",
+    severity: "error",
   });
 
   const { metricId } = useParams(); // Extract metricId from route params
@@ -71,7 +71,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const metricsResponse = await axios.get('http://localhost:5000/api/metrics');
+        const metricsResponse = await axios.get(
+          `${process.env.REACT_APP_ROOT_URL}/api/metrics`
+        );
         setMetrics(metricsResponse.data);
 
         // Extract unique countries from metrics data
@@ -80,11 +82,11 @@ const Dashboard = () => {
         ].filter(Boolean);
         setCountries(uniqueCountries);
       } catch (error) {
-        console.error('Error fetching metrics:', error);
+        console.error("Error fetching metrics:", error);
         setSnackbar({
           open: true,
-          message: 'Failed to fetch metrics.',
-          severity: 'error',
+          message: "Failed to fetch metrics.",
+          severity: "error",
         });
       }
     };
@@ -97,26 +99,28 @@ const Dashboard = () => {
     if (metricId) {
       const preSelectMetric = async () => {
         try {
-          const metricResponse = await axios.get(`http://localhost:5000/api/metrics/${metricId}`);
+          const metricResponse = await axios.get(
+            `${process.env.REACT_APP_ROOT_URL}/api/metrics/${metricId}`
+          );
           const metric = metricResponse.data;
 
           if (metric) {
-            setSelectedCountry(metric.country || '');
-            setSelectedTeam(metric.team || '');
+            setSelectedCountry(metric.country || "");
+            setSelectedTeam(metric.team || "");
             setSelectedMetricId(metric.id);
           } else {
             setSnackbar({
               open: true,
-              message: 'Metric not found.',
-              severity: 'warning',
+              message: "Metric not found.",
+              severity: "warning",
             });
           }
         } catch (error) {
-          console.error('Error fetching metric for pre-selection:', error);
+          console.error("Error fetching metric for pre-selection:", error);
           setSnackbar({
             open: true,
-            message: 'Error fetching metric details.',
-            severity: 'error',
+            message: "Error fetching metric details.",
+            severity: "error",
           });
         }
       };
@@ -128,12 +132,16 @@ const Dashboard = () => {
   // Update teams when selectedCountry changes
   useEffect(() => {
     if (selectedCountry) {
-      const filteredMetrics = metrics.filter((metric) => metric.country === selectedCountry);
-      const uniqueTeams = [...new Set(filteredMetrics.map((metric) => metric.team))].filter(Boolean);
+      const filteredMetrics = metrics.filter(
+        (metric) => metric.country === selectedCountry
+      );
+      const uniqueTeams = [
+        ...new Set(filteredMetrics.map((metric) => metric.team)),
+      ].filter(Boolean);
       setTeams(uniqueTeams);
     } else {
       setTeams([]);
-      setSelectedTeam('');
+      setSelectedTeam("");
     }
   }, [selectedCountry, metrics]);
 
@@ -161,8 +169,10 @@ const Dashboard = () => {
     try {
       // Fetch values and goals for the selected metric
       const [valuesResponse, goalsResponse] = await Promise.all([
-        axios.get(`http://localhost:5000/api/metric-values/${metricId}`),
-        axios.get(`http://localhost:5000/api/goals/${metricId}`),
+        axios.get(
+          `${process.env.REACT_APP_ROOT_URL}/api/metric-values/${metricId}`
+        ),
+        axios.get(`${process.env.REACT_APP_ROOT_URL}/api/goals/${metricId}`),
       ]);
 
       const values = valuesResponse.data;
@@ -194,7 +204,9 @@ const Dashboard = () => {
         yMin = Number(yAxisMin);
       } else {
         // Optionally, set yMin to the minimum value in data - some padding
-        const allValues = [...metricValues, ...metricGoals].filter((val) => val !== null);
+        const allValues = [...metricValues, ...metricGoals].filter(
+          (val) => val !== null
+        );
         if (allValues.length > 0) {
           yMin = Math.min(...allValues) * 0.9; // 10% padding
           yMin = yMin < 0 ? 0 : yMin; // Ensure yMin is not negative
@@ -205,7 +217,9 @@ const Dashboard = () => {
         yMax = Number(yAxisMax);
       } else {
         // Optionally, set yMax to the maximum value in data + some padding
-        const allValues = [...metricValues, ...metricGoals].filter((val) => val !== null);
+        const allValues = [...metricValues, ...metricGoals].filter(
+          (val) => val !== null
+        );
         if (allValues.length > 0) {
           yMax = Math.max(...allValues) * 1.1; // 10% padding
         }
@@ -215,38 +229,39 @@ const Dashboard = () => {
       if (yMin !== undefined && yMax !== undefined && yMin >= yMax) {
         setSnackbar({
           open: true,
-          message: 'Minimum Y-axis value must be less than the maximum Y-axis value.',
-          severity: 'warning',
+          message:
+            "Minimum Y-axis value must be less than the maximum Y-axis value.",
+          severity: "warning",
         });
         return;
       }
 
       // Prepare chart data with updated colors
       const chartData = {
-        labels: weeks.map((week) => format(new Date(week), 'MMM dd')), // Ensure 'format' is defined
+        labels: weeks.map((week) => format(new Date(week), "MMM dd")), // Ensure 'format' is defined
         datasets: [
           {
-            label: 'Value',
+            label: "Value",
             data: metricValues,
-            borderColor: '#386743', // Updated color
-            backgroundColor: 'rgba(56, 103, 67, 0.2)', // Updated color with opacity
+            borderColor: "#386743", // Updated color
+            backgroundColor: "rgba(56, 103, 67, 0.2)", // Updated color with opacity
           },
           {
-            label: 'Goal',
+            label: "Goal",
             data: metricGoals,
-            borderColor: '#592846', // Updated color
-            backgroundColor: 'rgba(89, 40, 70, 0.2)', // Updated color with opacity
+            borderColor: "#592846", // Updated color
+            backgroundColor: "rgba(89, 40, 70, 0.2)", // Updated color with opacity
           },
         ],
       };
 
       setChartData(chartData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       setSnackbar({
         open: true,
-        message: 'Failed to fetch chart data.',
-        severity: 'error',
+        message: "Failed to fetch chart data.",
+        severity: "error",
       });
     }
   };
@@ -254,33 +269,33 @@ const Dashboard = () => {
   // Handlers for dropdown changes
   const handleCountryChange = (event) => {
     setSelectedCountry(event.target.value);
-    setSelectedTeam('');
-    setSelectedMetricId('');
+    setSelectedTeam("");
+    setSelectedMetricId("");
     setChartData(null);
-    setYAxisMax('');
-    setYAxisMin('');
+    setYAxisMax("");
+    setYAxisMin("");
   };
 
   const handleTeamChange = (event) => {
     setSelectedTeam(event.target.value);
-    setSelectedMetricId('');
+    setSelectedMetricId("");
     setChartData(null);
-    setYAxisMax('');
-    setYAxisMin('');
+    setYAxisMax("");
+    setYAxisMin("");
   };
 
   // Handler for metric selection via card click
   const handleMetricSelect = (metricId) => {
     if (metricId === selectedMetricId) {
       // If the clicked metric is already selected, deselect it
-      setSelectedMetricId('');
+      setSelectedMetricId("");
       setChartData(null);
-      setYAxisMax('');
-      setYAxisMin('');
+      setYAxisMax("");
+      setYAxisMin("");
     } else {
       setSelectedMetricId(metricId);
-      setYAxisMax('');
-      setYAxisMin('');
+      setYAxisMax("");
+      setYAxisMin("");
     }
   };
 
@@ -309,12 +324,16 @@ const Dashboard = () => {
     const max = parseFloat(yAxisMax);
     const dataMax = chartData
       ? Math.max(
-          ...chartData.datasets.flatMap((dataset) => dataset.data).filter((val) => val !== null)
+          ...chartData.datasets
+            .flatMap((dataset) => dataset.data)
+            .filter((val) => val !== null)
         )
       : 0;
     const dataMin = chartData
       ? Math.min(
-          ...chartData.datasets.flatMap((dataset) => dataset.data).filter((val) => val !== null)
+          ...chartData.datasets
+            .flatMap((dataset) => dataset.data)
+            .filter((val) => val !== null)
         )
       : 0;
 
@@ -328,8 +347,8 @@ const Dashboard = () => {
         setYAxisMinError(true);
         setSnackbar({
           open: true,
-          message: 'Minimum Y-axis value cannot exceed the maximum value.',
-          severity: 'warning',
+          message: "Minimum Y-axis value cannot exceed the maximum value.",
+          severity: "warning",
         });
         valid = false;
       }
@@ -343,15 +362,16 @@ const Dashboard = () => {
         setYAxisMaxError(true);
         setSnackbar({
           open: true,
-          message: 'Maximum Y-axis value must be greater than the minimum value.',
-          severity: 'warning',
+          message:
+            "Maximum Y-axis value must be greater than the minimum value.",
+          severity: "warning",
         });
         valid = false;
       } else if (max < dataMax) {
         setSnackbar({
           open: true,
-          message: 'Maximum Y-axis value is less than the maximum data value.',
-          severity: 'warning',
+          message: "Maximum Y-axis value is less than the maximum data value.",
+          severity: "warning",
         });
         valid = false;
       }
@@ -362,8 +382,8 @@ const Dashboard = () => {
       fetchChartData(selectedMetricId);
       setSnackbar({
         open: true,
-        message: 'Y-axis settings applied successfully!',
-        severity: 'success',
+        message: "Y-axis settings applied successfully!",
+        severity: "success",
       });
     }
   };
@@ -376,11 +396,11 @@ const Dashboard = () => {
   return (
     <Box
       sx={{
-        width: '90%',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        paddingTop: '40px', // Add space at the top for header
-        paddingBottom: '40px', // Add space at the bottom for footer
+        width: "90%",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        paddingTop: "40px", // Add space at the top for header
+        paddingBottom: "40px", // Add space at the bottom for footer
       }}
     >
       <Typography variant="h4" gutterBottom>
@@ -388,7 +408,7 @@ const Dashboard = () => {
       </Typography>
 
       {/* Country Selection Dropdown */}
-      <FormControl fullWidth variant="outlined" sx={{ marginBottom: '20px' }}>
+      <FormControl fullWidth variant="outlined" sx={{ marginBottom: "20px" }}>
         <InputLabel id="country-select-label">Select Country</InputLabel>
         <Select
           labelId="country-select-label"
@@ -409,7 +429,7 @@ const Dashboard = () => {
       <FormControl
         fullWidth
         variant="outlined"
-        sx={{ marginBottom: '20px' }}
+        sx={{ marginBottom: "20px" }}
         disabled={!selectedCountry}
       >
         <InputLabel id="team-select-label">Select Team</InputLabel>
@@ -436,24 +456,28 @@ const Dashboard = () => {
           </Typography>
           <Grid container spacing={2}>
             {filteredMetrics.map((metric) => (
-              <Grid item xs={12} sm={6} md={3} key={metric.id}> {/* Changed md from 4 to 3 for 4 per row */}
+              <Grid item xs={12} sm={6} md={3} key={metric.id}>
+                {" "}
+                {/* Changed md from 4 to 3 for 4 per row */}
                 <Card
                   sx={{
-                    backgroundColor: metric.id === selectedMetricId ? '#592846' : '#f5f5f5',
-                    color: metric.id === selectedMetricId ? '#FFFFFF' : '#000000',
-                    height: '100%',
+                    backgroundColor:
+                      metric.id === selectedMetricId ? "#592846" : "#f5f5f5",
+                    color:
+                      metric.id === selectedMetricId ? "#FFFFFF" : "#000000",
+                    height: "100%",
                   }}
                 >
                   <CardActionArea
                     onClick={() => handleMetricSelect(metric.id)}
-                    sx={{ height: '100%' }}
+                    sx={{ height: "100%" }}
                   >
                     <CardContent
                       sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: '100px', // Reduced height for smaller squares
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "100px", // Reduced height for smaller squares
                       }}
                     >
                       <Typography variant="h6" align="center">
@@ -471,8 +495,9 @@ const Dashboard = () => {
       {/* Chart and Y-Axis Configuration */}
       {chartData && (
         <>
-          <Typography variant="h6" gutterBottom sx={{ marginTop: '30px' }}>
-            Performance Over Time: {metrics.find((m) => m.id === selectedMetricId)?.name}
+          <Typography variant="h6" gutterBottom sx={{ marginTop: "30px" }}>
+            Performance Over Time:{" "}
+            {metrics.find((m) => m.id === selectedMetricId)?.name}
           </Typography>
           <Line
             data={chartData}
@@ -480,20 +505,20 @@ const Dashboard = () => {
               responsive: true,
               plugins: {
                 legend: {
-                  position: 'top',
+                  position: "top",
                   labels: {
                     // Use the dataset colors in the legend
                     usePointStyle: true,
-                    pointStyle: 'line',
+                    pointStyle: "line",
                   },
                 },
                 // Removed the title plugin as per requirement
                 tooltip: {
                   callbacks: {
                     label: function (context) {
-                      let label = context.dataset.label || '';
+                      let label = context.dataset.label || "";
                       if (label) {
-                        label += ': ';
+                        label += ": ";
                       }
                       if (context.parsed.y !== null) {
                         label += context.parsed.y;
@@ -507,8 +532,10 @@ const Dashboard = () => {
                 y: {
                   beginAtZero: true, // Ensures Y-axis starts at 0
                   // Set min and max if provided
-                  ...(yAxisMin && !isNaN(yAxisMin) && { min: Number(yAxisMin) }),
-                  ...(yAxisMax && !isNaN(yAxisMax) && { max: Number(yAxisMax) }),
+                  ...(yAxisMin &&
+                    !isNaN(yAxisMin) && { min: Number(yAxisMin) }),
+                  ...(yAxisMax &&
+                    !isNaN(yAxisMax) && { max: Number(yAxisMax) }),
                   ticks: {
                     // Optional: Customize tick formatting here
                   },
@@ -520,11 +547,11 @@ const Dashboard = () => {
           {/* Y-Axis Manual Configuration */}
           <Box
             sx={{
-              marginTop: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              flexDirection: { xs: 'column', sm: 'row' }, // Responsive layout
-              gap: '10px',
+              marginTop: "20px",
+              display: "flex",
+              alignItems: "center",
+              flexDirection: { xs: "column", sm: "row" }, // Responsive layout
+              gap: "10px",
             }}
           >
             {/* Y-Axis Minimum Configuration */}
@@ -537,7 +564,7 @@ const Dashboard = () => {
               sx={{ flex: 1 }}
               placeholder="Enter minimum value (optional)"
               error={yAxisMinError}
-              helperText={yAxisMinError ? 'Invalid minimum value.' : ''}
+              helperText={yAxisMinError ? "Invalid minimum value." : ""}
             />
 
             {/* Y-Axis Maximum Configuration */}
@@ -550,7 +577,7 @@ const Dashboard = () => {
               sx={{ flex: 1 }}
               placeholder="Enter maximum value (optional)"
               error={yAxisMaxError}
-              helperText={yAxisMaxError ? 'Invalid maximum value.' : ''}
+              helperText={yAxisMaxError ? "Invalid maximum value." : ""}
             />
 
             {/* Apply Button */}
@@ -558,12 +585,12 @@ const Dashboard = () => {
               variant="contained"
               onClick={applyYAxisSettings}
               sx={{
-                backgroundColor: '#386743',
-                color: '#FFFFFF',
-                '&:hover': {
-                  backgroundColor: '#2e5633', // Darker shade on hover
+                backgroundColor: "#386743",
+                color: "#FFFFFF",
+                "&:hover": {
+                  backgroundColor: "#2e5633", // Darker shade on hover
                 },
-                minWidth: '120px',
+                minWidth: "120px",
               }}
             >
               Apply
@@ -577,9 +604,13 @@ const Dashboard = () => {
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

@@ -1,6 +1,6 @@
 // src/components/MetricForm.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -10,17 +10,17 @@ import {
   Snackbar,
   Alert,
   FormControlLabel, // Imported for Checkbox
-  Checkbox,          // Imported for Checkbox
-} from '@mui/material';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+  Checkbox, // Imported for Checkbox
+} from "@mui/material";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const MetricForm = () => {
   const [metric, setMetric] = useState({
-    name: '',
-    description: '',
-    team: '',
-    country: '',
+    name: "",
+    description: "",
+    team: "",
+    country: "",
     is_above_good: true, // Initialize with default value
   });
 
@@ -32,8 +32,8 @@ const MetricForm = () => {
   });
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const navigate = useNavigate();
 
@@ -41,19 +41,21 @@ const MetricForm = () => {
   const normalizeString = (str) => {
     return str
       .trim()
-      .split(' ') // Split by spaces
-      .filter(word => word !== '') // Remove extra spaces
-      .map(word => 
-        word
-          .split('-') // Split hyphenated words
-          .map(part => 
-            part === part.toUpperCase() 
-              ? part // Preserve all-uppercase parts
-              : (part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()) // Capitalize first letter
-          )
-          .join('-') // Rejoin hyphenated parts
+      .split(" ") // Split by spaces
+      .filter((word) => word !== "") // Remove extra spaces
+      .map(
+        (word) =>
+          word
+            .split("-") // Split hyphenated words
+            .map(
+              (part) =>
+                part === part.toUpperCase()
+                  ? part // Preserve all-uppercase parts
+                  : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() // Capitalize first letter
+            )
+            .join("-") // Rejoin hyphenated parts
       )
-      .join(' '); // Rejoin words
+      .join(" "); // Rejoin words
   };
 
   // Fetch existing metrics to derive unique teams and countries
@@ -61,7 +63,9 @@ const MetricForm = () => {
     const fetchExistingData = async () => {
       setLoadingOptions({ teams: true, countries: true });
       try {
-        const response = await axios.get('http://localhost:5000/api/metrics');
+        const response = await axios.get(
+          `${process.env.REACT_APP_ROOT_URL}/api/metrics`
+        );
         const allMetrics = response.data;
 
         // Extract unique teams and countries with normalization
@@ -69,7 +73,7 @@ const MetricForm = () => {
           ...new Set(
             allMetrics
               .map((metric) => metric.team)
-              .filter((team) => team && team.trim() !== '')
+              .filter((team) => team && team.trim() !== "")
               .map((team) => normalizeString(team))
           ),
         ];
@@ -78,7 +82,7 @@ const MetricForm = () => {
           ...new Set(
             allMetrics
               .map((metric) => metric.country)
-              .filter((country) => country && country.trim() !== '')
+              .filter((country) => country && country.trim() !== "")
               .map((country) => normalizeString(country))
           ),
         ];
@@ -86,9 +90,9 @@ const MetricForm = () => {
         setUniqueTeams(teams);
         setUniqueCountries(countries);
       } catch (error) {
-        console.error('Error fetching existing metrics:', error);
-        setSnackbarMessage('Failed to load existing teams and countries.');
-        setSnackbarSeverity('error');
+        console.error("Error fetching existing metrics:", error);
+        setSnackbarMessage("Failed to load existing teams and countries.");
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
       } finally {
         setLoadingOptions({ teams: false, countries: false });
@@ -106,7 +110,7 @@ const MetricForm = () => {
 
   // Handle changes from Autocomplete components
   const handleAutocompleteChange = (event, newValue, field) => {
-    setMetric({ ...metric, [field]: newValue || '' });
+    setMetric({ ...metric, [field]: newValue || "" });
   };
 
   // Handle changes to is_above_good checkbox
@@ -118,8 +122,8 @@ const MetricForm = () => {
   const handleSubmit = async () => {
     // Validate required fields
     if (!metric.name.trim()) {
-      setSnackbarMessage('Metric Name is required.');
-      setSnackbarSeverity('warning');
+      setSnackbarMessage("Metric Name is required.");
+      setSnackbarSeverity("warning");
       setOpenSnackbar(true);
       return;
     }
@@ -128,45 +132,48 @@ const MetricForm = () => {
       // Normalize team and country names
       const normalizedMetric = {
         ...metric,
-        team: metric.team ? normalizeString(metric.team) : '',
-        country: metric.country ? normalizeString(metric.country) : '',
+        team: metric.team ? normalizeString(metric.team) : "",
+        country: metric.country ? normalizeString(metric.country) : "",
       };
 
       // Create the metric
-      const response = await axios.post('http://localhost:5000/api/metrics', normalizedMetric);
+      const response = await axios.post(
+        `${process.env.REACT_APP_ROOT_URL}/api/metrics`,
+        normalizedMetric
+      );
 
       if (response.status === 201) {
-        setSnackbarMessage('Metric saved successfully!');
-        setSnackbarSeverity('success');
+        setSnackbarMessage("Metric saved successfully!");
+        setSnackbarSeverity("success");
         setOpenSnackbar(true);
         // Navigate back to the Metrics Overview page after a short delay
-        setTimeout(() => navigate('/'), 1500);
+        setTimeout(() => navigate("/"), 1500);
       } else {
-        setSnackbarMessage('Failed to save metric.');
-        setSnackbarSeverity('error');
+        setSnackbarMessage("Failed to save metric.");
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
       }
     } catch (error) {
-      console.error('Error saving metric:', error);
+      console.error("Error saving metric:", error);
       // Extract error message if available
       const errorMsg =
-        error.response?.data?.message || 'An unexpected error occurred.';
+        error.response?.data?.message || "An unexpected error occurred.";
       setSnackbarMessage(`Failed to save metric: ${errorMsg}`);
-      setSnackbarSeverity('error');
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
 
   // Handle Snackbar Close
   const handleSnackbarClose = (event, reason) => {
-    if (reason === 'clickaway') {
+    if (reason === "clickaway") {
       return;
     }
     setOpenSnackbar(false);
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+    <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
       <Typography variant="h4" gutterBottom>
         Add New Metric
       </Typography>
@@ -178,7 +185,7 @@ const MetricForm = () => {
         value={metric.name}
         onChange={handleMetricChange}
         variant="outlined"
-        style={{ marginBottom: '20px', width: '100%' }}
+        style={{ marginBottom: "20px", width: "100%" }}
         required
       />
 
@@ -189,7 +196,7 @@ const MetricForm = () => {
         value={metric.description}
         onChange={handleMetricChange}
         variant="outlined"
-        style={{ marginBottom: '20px', width: '100%' }}
+        style={{ marginBottom: "20px", width: "100%" }}
         multiline
         rows={3}
       />
@@ -199,8 +206,12 @@ const MetricForm = () => {
         freeSolo
         options={uniqueTeams}
         value={metric.team}
-        onChange={(event, newValue) => handleAutocompleteChange(event, newValue, 'team')}
-        onInputChange={(event, newInputValue) => handleAutocompleteChange(event, newInputValue, 'team')}
+        onChange={(event, newValue) =>
+          handleAutocompleteChange(event, newValue, "team")
+        }
+        onInputChange={(event, newInputValue) =>
+          handleAutocompleteChange(event, newInputValue, "team")
+        }
         loading={loadingOptions.teams}
         renderInput={(params) => (
           <TextField
@@ -213,14 +224,16 @@ const MetricForm = () => {
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loadingOptions.teams ? <CircularProgress color="inherit" size={20} /> : null}
+                  {loadingOptions.teams ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
                   {params.InputProps.endAdornment}
                 </>
               ),
             }}
           />
         )}
-        style={{ marginBottom: '20px', width: '100%' }}
+        style={{ marginBottom: "20px", width: "100%" }}
       />
 
       {/* Country Autocomplete */}
@@ -228,8 +241,12 @@ const MetricForm = () => {
         freeSolo
         options={uniqueCountries}
         value={metric.country}
-        onChange={(event, newValue) => handleAutocompleteChange(event, newValue, 'country')}
-        onInputChange={(event, newInputValue) => handleAutocompleteChange(event, newInputValue, 'country')}
+        onChange={(event, newValue) =>
+          handleAutocompleteChange(event, newValue, "country")
+        }
+        onInputChange={(event, newInputValue) =>
+          handleAutocompleteChange(event, newInputValue, "country")
+        }
         loading={loadingOptions.countries}
         renderInput={(params) => (
           <TextField
@@ -242,14 +259,16 @@ const MetricForm = () => {
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loadingOptions.countries ? <CircularProgress color="inherit" size={20} /> : null}
+                  {loadingOptions.countries ? (
+                    <CircularProgress color="inherit" size={20} />
+                  ) : null}
                   {params.InputProps.endAdornment}
                 </>
               ),
             }}
           />
         )}
-        style={{ marginBottom: '20px', width: '100%' }}
+        style={{ marginBottom: "20px", width: "100%" }}
       />
 
       {/* is_above_good Checkbox */}
@@ -260,15 +279,17 @@ const MetricForm = () => {
             onChange={handleIsAboveGoodChange}
             name="is_above_good"
             color="primary"
-            inputProps={{ 'aria-label': 'Is it good for the metric to be above the goal?' }}
+            inputProps={{
+              "aria-label": "Is it good for the metric to be above the goal?",
+            }}
           />
         }
         label="Is it good for the metric to be above the goal?"
-        style={{ marginBottom: '20px' }}
+        style={{ marginBottom: "20px" }}
       />
 
       {/* Buttons */}
-      <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+      <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
         <Button
           variant="contained"
           color="primary"
@@ -277,7 +298,11 @@ const MetricForm = () => {
         >
           Save Metric
         </Button>
-        <Button variant="outlined" color="secondary" onClick={() => navigate('/')}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => navigate("/")}
+        >
           Back to Overview
         </Button>
       </div>
@@ -287,9 +312,13 @@ const MetricForm = () => {
         open={openSnackbar}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
